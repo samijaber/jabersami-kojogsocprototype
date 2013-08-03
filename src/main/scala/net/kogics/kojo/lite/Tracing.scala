@@ -153,11 +153,6 @@ def main(args: Array[String]) {
     }
   }
 
-  def incrementCurrEvt(name: String) {
-    if (currEvtVec.indexWhere(x => x._1 == name) == -1)
-      currEvtVec = currEvtVec :+ (name, None)
-  }
-
   def trace(code: String) = Utils.runAsync {
     try {
       turtles = Vector[Turtle]()
@@ -193,9 +188,13 @@ def main(args: Array[String]) {
                   createRequests(excludes, vm, threadStartEvt.thread())
                   incrementCurrEvt(name)
                 }
+                println("Thread started : " + name)
               case methodEnterEvt: MethodEntryEvent =>
                 currThread = methodEnterEvt.thread()
-                val thread = currThread
+                if (currThread.name.contains("AWT-")) {
+                  println("thread is " + currThread.name + " with method entered: " + methodEnterEvt.method().name)
+                }
+
                 if (!(ignoreMethods.contains(methodEnterEvt.method.name) || methodEnterEvt.method.name.startsWith("apply"))) {
                   try {
                     val frame = methodEnterEvt.thread().frame(0)
@@ -343,12 +342,23 @@ def main(args: Array[String]) {
     currEvtVec(index)._2
   }
   catch {
-    case t: Throwable => println("could not find MethodEvent for thread " + currThread.name); None
+    case t: Throwable =>
+      println("could not find MethodEvent for thread " + currThread.name + ". New entry created.")
+      /*
+       * Temporary solution? Create a new index for any thread with no previous entry in our Vector. 
+       */
+      incrementCurrEvt(currThread.name)
+      currEvtVec.last._2
   }
 
   def updateMethodEventVector(newEvt: Option[MethodEvent]) {
     var index = currEvtVec.indexWhere(evt => evt._1 == currThread.name)
     currEvtVec = currEvtVec.updated(index, (currThread.name, newEvt))
+  }
+
+  def incrementCurrEvt(name: String) {
+    if (currEvtVec.indexWhere(x => x._1 == name) == -1)
+      currEvtVec = currEvtVec :+ (name, None)
   }
 
   def handleMethodEntry(name: String, desc: String, isTurtle: Boolean, stkfrm: StackFrame, localArgs: List[LocalVariable], lineNum: Int, source: String, callerSource: String, callerLine: String, callerLineNum: Int) {
