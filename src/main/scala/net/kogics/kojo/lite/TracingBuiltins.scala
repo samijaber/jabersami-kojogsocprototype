@@ -12,10 +12,10 @@ import net.kogics.kojo.turtle.Turtle
 import net.kogics.kojo.story.StoryTeller
 
 object TracingBuiltins {
-  
+
   lazy val kojoCtx = new NoOpKojoCtx
-  lazy val spriteCanvas = new SpriteCanvas(kojoCtx)
-    
+  val spriteCanvas = new SpriteCanvas(kojoCtx)
+
   type Turtle = core.Turtle
   type Color = java.awt.Color
   type Font = java.awt.Font
@@ -27,25 +27,25 @@ object TracingBuiltins {
   def Point2D(x: Double, y: Double) = new java.awt.geom.Point2D.Double(x, y)
 
   val Random = new java.util.Random
-  
+
   def epochTimeMillis = System.currentTimeMillis()
   def epochTime = System.currentTimeMillis() / 1000.0
 
   class Costume {
-      val car = "/media/costumes/car.png"
-      val pencil = "/media/costumes/pencil.png"
-      val bat1 = "/media/costumes/bat1-a.png"
-      val bat2 = "/media/costumes/bat1-b.png"
-      val womanWaving = "/media/costumes/womanwaving.png"
-    }
-    
+    val car = "/media/costumes/car.png"
+    val pencil = "/media/costumes/pencil.png"
+    val bat1 = "/media/costumes/bat1-a.png"
+    val bat2 = "/media/costumes/bat1-b.png"
+    val womanWaving = "/media/costumes/womanwaving.png"
+  }
+
   class Background {
-      val trainTrack = "/media/backgrounds/train-tracks3.gif"
-    }
+    val trainTrack = "/media/backgrounds/train-tracks3.gif"
+  }
 
   class Sound {
-      val medieval1 = "/media/music-loops/Medieval1.mp3"
-    }
+    val medieval1 = "/media/music-loops/Medieval1.mp3"
+  }
 
   val Costume = new Costume
   val Background = new Background
@@ -66,7 +66,7 @@ object TracingBuiltins {
   val darkGray = JColor.darkGray
   val magenta = JColor.magenta
   val cyan = JColor.cyan
-  
+
   val BoldFont = JFont.BOLD
   val PlainFont = JFont.PLAIN
   val ItalicFont = JFont.ITALIC
@@ -76,29 +76,29 @@ object TracingBuiltins {
   val noColor = C.noColor
 
   val Kc = new staging.KeyCodes
-  
+
   val hueMod = Utils.hueMod _
   val satMod = Utils.satMod _
   val britMod = Utils.britMod _
-  
+
   lazy val turtle0 = spriteCanvas.turtle0
-  
+
   lazy val storyTeller = new StoryTeller(kojoCtx)
   def playMp3Loop(mp3File: String) {
     storyTeller.playMp3Loop(mp3File)
   }
-  
-  def color(R: Int, B: Int, G: Int): Color = new Color(R,B,G)
-  def Color(R: Int, B: Int, G: Int): Color = new Color(R,B,G)
-  def Color(R: Int, B: Int, G: Int, a:Int): Color = new Color(R,B,G,a)
+
+  def color(R: Int, B: Int, G: Int): Color = new Color(R, B, G)
+  def Color(R: Int, B: Int, G: Int): Color = new Color(R, B, G)
+  def Color(R: Int, B: Int, G: Int, a: Int): Color = new Color(R, B, G, a)
   def setBackground(c: Paint) {}
 
   /* movement */
   def savePosHe() {}
   def restorePosHe() {}
   def clear() {}
-  def cleari(){}
-  def invisible(){}
+  def cleari() {}
+  def invisible() {}
   def forward(n: Double) {}
   def circle(r: Double) {}
   def right() {}
@@ -113,20 +113,20 @@ object TracingBuiltins {
   def moveTo(x: Double, y: Double) {}
   def setPosition(x: Double, y: Double) {}
   def setPenColor(color: Paint) {}
-  def setFillColor(color: Paint){}
-  def setAnimationDelay(d: Long){}
-  def setPenThickness(d: Double){}
-  def penDown(){}
-  def penUp(){}
-  def repeat(n: Int) (fn: => Unit) {
+  def setFillColor(color: Paint) {}
+  def setAnimationDelay(d: Long) {}
+  def setPenThickness(d: Double) {}
+  def penDown() {}
+  def penUp() {}
+  def repeat(n: Int)(fn: => Unit) {
     var i = 0
-    while(i < n) {
+    while (i < n) {
       fn
       i += 1
     }
   }
-  
-  def repeatWhile(condition: Boolean) (fn: => Unit) {
+
+  def repeatWhile(condition: Boolean)(fn: => Unit) {
     while (condition) {
       fn
     }
@@ -134,26 +134,39 @@ object TracingBuiltins {
 
   def changePosition(x: Double, y: Double) {}
   def scaleCostume(a: Double) {}
-  def setCostumes(costumes: Vector[String]){}
-  
-  def axesOn(){}
-  def axesOff(){}
-  def gridOn(){}
-  def gridOff(){}
+  def setCostumes(costumes: Vector[String]) {}
+
+  def axesOn() {}
+  def axesOff() {}
+  def gridOn() {}
+  def gridOff() {}
   def zoom(x: Double, y: Double, z: Double) {}
-  
-  
+
   def stopActivity() = kojoCtx.stopActivity()
   def pause(secs: Double) = Thread.sleep((secs * 1000).toLong)
   /* turtle creation */
-  
+
+ // var turtles = Vector[Turtle]()
+
   def newTurtle(x: Double, y: Double): Turtle = {
+    /*
+    //var t0 = spriteCanvas.newTurtle(x, y, "/images/turtle32.png")
+    var t0 = new net.kogics.kojo.turtle.Turtle(spriteCanvas, "/images/turtle32.png", x, y)
+    turtles = turtles :+ t0
+    turtles.last
+    */
     spriteCanvas.newTurtle(x, y, "/images/turtle32.png")
   }
-  
+
   def newTurtle(x: Double, y: Double, str: String): Turtle = {
+    /*
+    //var t0 = spriteCanvas.newTurtle(x, y, str)
+    var t0 = new net.kogics.kojo.turtle.Turtle(spriteCanvas, str, x, y)
+    turtles = turtles :+ t0
+    turtles.last
+    */
     spriteCanvas.newTurtle(x, y, str)
   }
-  
+
   def runInBackground(code: => Unit) = Utils.runAsyncMonitored(code)
 }
