@@ -402,14 +402,29 @@ def main(args: Array[String]) {
 
   def runTurtleMethod(name: String, stkfrm: StackFrame, localArgs: List[LocalVariable]): Option[(Point2D.Double, Point2D.Double)] = {
     var ret: Option[(Point2D.Double, Point2D.Double)] = None
-    if (stkfrm.thisObject() == null) break;
-    var stdTurtle = if (name == "newTurtle") true else isFromWrapper(stkfrm)
+    var frame = if (stkfrm.thisObject() == null) {
+      currThread.frame(1)
+    }
+    else {
+      stkfrm
+    }
+
+    var stdTurtle = if (name == "newTurtle") true
+    else {
+      isFromWrapper(frame)
+    }
+
     import builtins.Tw
     import builtins.TSCanvas
     var turtle: Turtle = Tw.getTurtle
     if (!stdTurtle) {
-      var caller = stkfrm.thisObject().uniqueID()
+      var caller = frame.thisObject().uniqueID()
       var index = turtlesRefs.indexOf(caller)
+      println("caller ID is " + caller + 
+          ", ref found is " + turtlesRefs(index) +
+          ", function being called is " + name +
+          ", All refs are: ")
+      turtlesRefs.foreach(println(_))
       if (index != -1)
         turtle = turtles(index)
     }
