@@ -72,11 +72,7 @@ class TracingGUI(scriptEditor: ScriptEditor, kojoCtx: core.KojoCtx) {
     val lineNum = if (me.ended) me.exitLineNum else me.entryLineNum
 
     if (me.sourceName != "scripteditor" && me.callerSourceName == "scripteditor" && (me.returnVal == "<void value>" || me.returnVal == "null")) {
-<<<<<<< local
 //      println(taText)
-=======
-      //println(taText)
->>>>>>> other
     }
     else if (me.sourceName == "scripteditor" || (me.callerSourceName == "scripteditor" && me.callerLine.contains(me.methodName))) {
       Utils.runInSwingThread {
@@ -113,11 +109,7 @@ class TracingGUI(scriptEditor: ScriptEditor, kojoCtx: core.KojoCtx) {
       }
     }
     else {
-<<<<<<< local
 //      println(taText)
-=======
-      //println(taText)
->>>>>>> other
     }
   }
 }
