@@ -11,11 +11,20 @@ import lite.canvas.SpriteCanvas
 import net.kogics.kojo.turtle.Turtle
 import net.kogics.kojo.story.StoryTeller
 
+<<<<<<< local
+object TracingBuiltins extends RichTurtleCommands {
+  
+//  lazy val kojoCtx = new NoOpKojoCtx
+//  lazy val spriteCanvas = new SpriteCanvas(kojoCtx)
+  lazy val spriteCanvas = new NoOpSCanvas
+    
+=======
 object TracingBuiltins {
 
   lazy val kojoCtx = new NoOpKojoCtx
   val spriteCanvas = new SpriteCanvas(kojoCtx)
 
+>>>>>>> other
   type Turtle = core.Turtle
   type Color = java.awt.Color
   type Font = java.awt.Font
@@ -82,10 +91,13 @@ object TracingBuiltins {
   val britMod = Utils.britMod _
 
   lazy val turtle0 = spriteCanvas.turtle0
+<<<<<<< local
+  
+=======
 
   lazy val storyTeller = new StoryTeller(kojoCtx)
+>>>>>>> other
   def playMp3Loop(mp3File: String) {
-    storyTeller.playMp3Loop(mp3File)
   }
 
   def color(R: Int, B: Int, G: Int): Color = new Color(R, B, G)
@@ -100,14 +112,10 @@ object TracingBuiltins {
   def cleari() {}
   def invisible() {}
   def forward(n: Double) {}
+  def forward(): Unit = forward(25)
+  def back(): Unit = back(25)
   def circle(r: Double) {}
-  def right() {}
-  def right(n: Double) {}
-  def left() {}
-  def left(n: Double) {}
   def turn(n: Double) {}
-  def back() {}
-  def back(n: Double) {}
   def home() {}
   def jumpTo(x: Double, y: Double) {}
   def moveTo(x: Double, y: Double) {}
@@ -141,10 +149,21 @@ object TracingBuiltins {
   def gridOn() {}
   def gridOff() {}
   def zoom(x: Double, y: Double, z: Double) {}
+<<<<<<< local
+  
+  
+  def stopActivity() = {}
+=======
 
   def stopActivity() = kojoCtx.stopActivity()
+>>>>>>> other
   def pause(secs: Double) = Thread.sleep((secs * 1000).toLong)
   /* turtle creation */
+<<<<<<< local
+  
+  def newTurtle(x: Double, y: Double): core.Turtle = {
+    newTurtle(x, y, "/images/turtle32.png")
+=======
 
  // var turtles = Vector[Turtle]()
 
@@ -156,7 +175,17 @@ object TracingBuiltins {
     turtles.last
     */
     spriteCanvas.newTurtle(x, y, "/images/turtle32.png")
+>>>>>>> other
   }
+<<<<<<< local
+  
+  def newTurtle(x: Double, y: Double, costume: String): core.Turtle = {
+    new net.kogics.kojo.turtle.Turtle(spriteCanvas, costume, x, y) {
+        override def act(fn: Turtle => Unit) {
+          fn(this)
+        }
+    }
+=======
 
   def newTurtle(x: Double, y: Double, str: String): Turtle = {
     /*
@@ -166,7 +195,13 @@ object TracingBuiltins {
     turtles.last
     */
     spriteCanvas.newTurtle(x, y, str)
+>>>>>>> other
   }
+<<<<<<< local
+  
+  def runInBackground(code: => Unit) { code }
+=======
 
   def runInBackground(code: => Unit) = Utils.runAsyncMonitored(code)
+>>>>>>> other
 }

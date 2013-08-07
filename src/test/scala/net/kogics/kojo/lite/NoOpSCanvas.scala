@@ -51,7 +51,9 @@ class NoOpSCanvas extends SCanvas {
   def setCanvasBackground(c: Paint) {}
   def kojoCtx: KojoCtx = null
   def animate(fn: => Unit): Future[PActivity] = null
-  def animateActivity(a: PActivity) {}
+  def animateActivity(a: PActivity) {
+    a.getDelegate().activityFinished(a)
+  }
   def stopAnimation() {}
   // stuff for the pictures module
   def getCamera: PCamera = new PCamera
