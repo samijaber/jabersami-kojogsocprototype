@@ -18,8 +18,6 @@ package net.kogics.kojo.lite
 import java.awt.Color
 import java.awt.geom.Point2D
 import java.io.File
-import java.lang.reflect.InvocationTargetException
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.HashMap
@@ -31,8 +29,8 @@ import scala.tools.nsc.reporters.Reporter
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 import scala.util.matching.Regex
-
 import com.sun.jdi.AbsentInformationException
+import com.sun.jdi.InvalidStackFrameException
 import com.sun.jdi.Bootstrap
 import com.sun.jdi.IntegerValue
 import com.sun.jdi.LocalVariable
@@ -52,9 +50,9 @@ import com.sun.jdi.event.VMDeathEvent
 import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequest
-
 import net.kogics.kojo.core.Turtle
 import net.kogics.kojo.util.Utils
+import java.lang.reflect.InvocationTargetException
 
 class Tracing(scriptEditor: ScriptEditor, builtins: Builtins) {
   var evtSet: EventSet = _
@@ -152,11 +150,6 @@ def main(args: Array[String]) {
     }
   }
 
-  def incrementCurrEvt(name: String) {
-    if (currEvtVec.indexWhere(x => x._1 == name) == -1)
-      currEvtVec = currEvtVec :+ (name, None)
-  }
-
   def trace(code: String) = Utils.runAsync {
     try {
       turtles.clear()
@@ -193,7 +186,6 @@ def main(args: Array[String]) {
                 }
               case methodEnterEvt: MethodEntryEvent =>
                 currThread = methodEnterEvt.thread()
-                val thread = currThread
                 if (!(ignoreMethods.contains(methodEnterEvt.method.name) || methodEnterEvt.method.name.startsWith("apply"))) {
                   try {
                     val frame = methodEnterEvt.thread().frame(0)
@@ -201,12 +193,13 @@ def main(args: Array[String]) {
                       if (methodEnterEvt.method().arguments().size > 0)
                         "(%s)" format methodEnterEvt.method.arguments.map { n =>
                           val frameVal = frame.getValue(n)
-
-                          val argval = if (false) {
+                          val argval = if (frameVal.isInstanceOf[ObjectReference] && frameVal.toString().contains("instance of ") && !frameVal.toString().contains("TracingBuiltins")) {
+                            println("[Method Entry] Arg is an objRef and " + frameVal)
                             val objRef = frameVal.asInstanceOf[ObjectReference]
                             val mthd = objRef.referenceType.methodsByName("toString")(0)
-                            val rtrndValue = objRef.invokeMethod(currThread, mthd, new java.util.ArrayList, ObjectReference.INVOKE_SINGLE_THREADED)
+                            val rtrndValue = objRef.invokeMethod(currThread, mthd, new java.util.ArrayList, ObjectReference.INVOKE_NONVIRTUAL)
                             rtrndValue.asInstanceOf[StringReference].value()
+                            println("end of arg value")
                           }
                           else {
                             frameVal
@@ -256,12 +249,25 @@ def main(args: Array[String]) {
                     //println(s"[Exception] [Method Enter] [${t.getClass()}] ${methodEnterEvt.method.name} -- ${t.getMessage}")
                   }
                 }
-
               case methodExitEvt: MethodExitEvent =>
                 if (!(ignoreMethods.contains(methodExitEvt.method.name) || methodExitEvt.method.name.startsWith("apply"))) {
                   try {
                     currThread = methodExitEvt.thread()
-                    val desc = s"[Method Exit] ${methodExitEvt.method().name}(return value): " + methodExitEvt.returnValue
+
+                    val rtrnVal = methodExitEvt.returnValue
+                    val toprint = if (rtrnVal.isInstanceOf[ObjectReference] && rtrnVal.toString().contains("instance of ")) {
+                      println("[Method Exit] RtrnVal is an objRef and " + rtrnVal)
+                      val objRef = rtrnVal.asInstanceOf[ObjectReference]
+                      val mthd = objRef.referenceType.methodsByName("toString")(0)
+                      val rtrndValue = objRef.invokeMethod(currThread, mthd, new java.util.ArrayList, ObjectReference.INVOKE_NONVIRTUAL)
+                      rtrndValue.asInstanceOf[StringReference].value()
+                      println("end of return value")
+                    }
+                    else {
+                      rtrnVal
+                    }
+
+                    val desc = s"[Method Exit] ${methodExitEvt.method().name}(return value): " + toprint
                     val argList = try { methodExitEvt.method.arguments.toList }
                     catch { case e: AbsentInformationException => List[LocalVariable]() }
 
@@ -325,12 +331,20 @@ def main(args: Array[String]) {
     currEvtVec(index)._2
   }
   catch {
-    case t: Throwable => println("could not find MethodEvent for thread " + currThread.name); None
+    case t: Throwable =>
+      println("could not find MethodEvent for thread " + currThread.name + ". New one created.");
+      incrementCurrEvt(currThread.name)
+      currEvtVec.last._2
   }
 
   def updateMethodEventVector(newEvt: Option[MethodEvent]) {
     var index = currEvtVec.indexWhere(evt => evt._1 == currThread.name)
     currEvtVec = currEvtVec.updated(index, (currThread.name, newEvt))
+  }
+
+  def incrementCurrEvt(name: String) {
+    if (currEvtVec.indexWhere(x => x._1 == name) == -1)
+      currEvtVec = currEvtVec :+ (name, None)
   }
 
   def handleMethodEntry(name: String, desc: String, isTurtle: Boolean, stkfrm: StackFrame, localArgs: List[LocalVariable], lineNum: Int, source: String, callerSource: String, callerLine: String, callerLineNum: Int) {
@@ -482,7 +496,7 @@ def main(args: Array[String]) {
           val (x, y, str) = (stkfrm.getValue(localArgs(0)).toString.toDouble, stkfrm.getValue(localArgs(1)).toString.toDouble, stkfrm.getValue(localArgs(2)).toString)
           val newTurtle = TSCanvas.newTurtle(x, y, str.slice(1, str.length - 1))
           val ref = retVal.asInstanceOf[ObjectReference].uniqueID()
-//          println(s"New turtle $ref mapped")
+          //          println(s"New turtle $ref mapped")
           turtles(ref) = newTurtle
         }
 
